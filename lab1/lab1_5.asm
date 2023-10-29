@@ -10,7 +10,7 @@ section .text
 main:
     mov sp, 0x7C00
 
-    mov ax, 1303H
+    mov ax, 1303h
 
     mov dh, 0
     mov dl, 0
@@ -18,4 +18,4 @@ main:
     mov bp, msg
     mov cx, 6
 
-    int 10H
+    int 10h

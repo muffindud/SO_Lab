@@ -19,5 +19,5 @@ main:
     mov bp, msg
     mov cx, 6
 
-    int 10H
+    int 10h
     
