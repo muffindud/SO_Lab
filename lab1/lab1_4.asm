@@ -6,7 +6,7 @@ jmp main            ; Jump to main
 
 section .text
     ; msg db 'Hello' with individual character attributes
-    msg db 'H', 0x09, 'e', 0x0E, 'l', 0x0B, 'l', 0x0C, 'o', 0x0D
+    msg db 'H', 0x10, 'e', 0x01, 'l', 0x4F, 'l', 0x53, 'o', 0x71
 
 main:
     mov sp, 0x7C00  ; Set stack pointer to 0x7C00
