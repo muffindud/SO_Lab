@@ -75,7 +75,7 @@ escape_enter:
 
     mov ah, 02h     ; Call set cursor position
     mov dl, 0x00    ; Move cursor to the beginning of the line
-    inc dh          ; Move cursor down one line
+    add dh, 2       ; Move cursor down one line
     int 10h         ; Call BIOS video services
 
     add si, buffer  ; Reset source index
@@ -98,7 +98,9 @@ empty_enter:
     inc dh          ; Move cursor down one line
     int 10h         ; Call BIOS video services
 
-    jmp main        ; Jump to main
+    add si, buffer  ; Reset source index
+
+    jmp clear_buffer
 
 main:
     mov ah, 00h     ; Call read next keystroke
