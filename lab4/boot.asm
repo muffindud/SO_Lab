@@ -1,6 +1,8 @@
 [bits 16]
 org 0x7C00
 
+boot:
+
 mov bx, 0x0
 mov es, bx
 mov bx, 0x7E00
