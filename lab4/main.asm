@@ -72,12 +72,32 @@ main:
 
         main_accept_sector:
             mov word [main_sector], ax
-            jmp main_read_address
+    
+    main_read_sector_ct:
+        call main_clear_num_buffer
+
+        mov dx, 0x0500
+        mov bp, main_sector_ct_prompt
+        mov cx, main_sector_ct_prompt_len
+        call main_print
+
+        call main_read_b10
+
+        mov ax, word [main_num_buffer]
+        cmp ax, 0x1F
+
+        jl main_accept_sector_ct
+
+        call main_clear_row
+        jmp main_read_sector_ct
+
+        main_accept_sector_ct:
+            mov word [main_sector_ct], ax
 
     main_read_address:
         call main_clear_num_buffer
 
-        mov dx, 0x0500
+        mov dx, 0x0600
         mov bp, main_address_prompt
         mov cx, main_address_prompt_len
         call main_print
@@ -306,6 +326,9 @@ section .data
     main_author db "Made by Corneliu Catlabuga."
     main_author_len equ $ - main_author
 
+    main_sector_ct_prompt db "SEC CT: "
+    main_sector_ct_prompt_len equ $ - main_sector_ct_prompt
+
     main_side_prompt db "SIDE:   "
     main_side_prompt_len equ $ - main_side_prompt
 
@@ -323,6 +346,7 @@ section .data
     main_side dw 0x0
     main_track dw 0x0
     main_sector dw 0x0
+    main_sector_ct dw 0x0
 
     address1 dw 0x0
     address2 dw 0x0
