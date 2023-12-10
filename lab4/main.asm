@@ -75,8 +75,31 @@ main:
             jmp main_read_address
 
     main_read_address:
-    ; TODO: continue here
-    
+        call main_clear_num_buffer
+
+        mov dx, 0x0500
+        mov bp, main_address_prompt
+        mov cx, main_address_prompt_len
+        call main_print
+
+        call main_read_b16
+
+        mov ax, word [main_num_buffer]
+        mov word [address1], ax
+
+        mov ah, 0Eh
+        mov al, ':'
+        int 10h
+
+        call main_clear_num_buffer
+        
+        call main_read_b16
+
+        mov ax, word [main_num_buffer]
+        mov word [address2], ax
+
+    ; TODO: Continue here
+
     jmp $
 
 main_print:
@@ -178,6 +201,103 @@ main_read_b10:
 
         jmp main_read_b10_accept
 
+main_read_b16:
+    mov ah, 00h
+    int 16h
+    
+    cmp al, 0x1B
+    je main_read_b16_return
+
+    cmp al, 0x0D
+    je main_read_b16_return
+
+    cmp al, 0x08
+    je main_read_b16_backspace
+
+    cmp al, 0x30
+    jl main_read_b16
+
+    cmp al, 0x3A
+    jl main_read_b16_handle_number
+
+    cmp al, 0x41
+    jl main_read_b16
+
+    cmp al, 0x47
+    jl main_read_b16_handle_uppercase
+
+    cmp al, 0x61
+    jl main_read_b16
+
+    cmp al, 0x67
+    jl main_read_b16_handle_lowercase
+
+    jmp main_read_b16
+
+    main_read_b16_handle_number:
+        sub al, 0x30
+        jmp main_read_b16_handle_value
+
+    main_read_b16_handle_uppercase:
+        sub al, 0x37
+        jmp main_read_b16_handle_value
+
+    main_read_b16_handle_lowercase:
+        sub al, 0x57
+        jmp main_read_b16_handle_value
+
+    main_read_b16_handle_value:
+        mov cl, al
+        mov ax, [main_num_buffer]
+
+        cmp ax, 0xFFF
+        ja main_read_b16
+
+        mov dx, 0x10
+        mul dx
+
+        add ax, cx
+        mov [main_num_buffer], ax
+
+        mov ah, 0Eh
+        mov al, cl
+        cmp cx, 0x9
+        jg main_read_b16_print_letter
+            add al, 0x30
+            int 10h
+            jmp main_read_b16
+
+        main_read_b16_print_letter:
+            add al, 0x37
+            int 10h
+            jmp main_read_b16
+
+    main_read_b16_return:
+        ret
+    
+    main_read_b16_backspace:
+        mov dx, 0x0
+        mov ax, [main_num_buffer]
+        cmp ax, 0x0
+        je main_read_b16
+
+        mov cx, 0x10
+        div cx
+        mov [main_num_buffer], ax
+        
+        pusha
+        mov ah, 03h
+        mov bh, 0x0
+        int 10h
+        mov ah, 02h
+        sub dl, 0x1
+        int 10h
+        mov ah, 0Ah
+        mov al, 0x0
+        int 10h
+        popa
+
+        jmp main_read_b16
 
 section .data
     main_welcome db "Welcome to CornOS."
@@ -195,10 +315,16 @@ section .data
     main_sector_prompt db "SECTOR: "
     main_sector_prompt_len equ $ - main_sector_prompt
 
+    main_address_prompt db "ADDRESS: "
+    main_address_prompt_len equ $ - main_address_prompt
+
     main_num_buffer dw 0x0
 
     main_side dw 0x0
     main_track dw 0x0
     main_sector dw 0x0
+
+    address1 dw 0x0
+    address2 dw 0x0
 
     clean_row times 0x50 db 0x0
