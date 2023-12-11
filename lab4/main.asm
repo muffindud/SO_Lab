@@ -177,6 +177,10 @@ main:
     mov ah, 00h
     int 16h
 
+    call main_clear_screen
+
+    mov word [program_offset], bx
+
     ; Fuck it, i'll solve it later
     ; Note KEEP ES AT 0x0
     ; jmp [main_address_2]
@@ -378,6 +382,23 @@ main_read_b16:
         popa
 
         jmp main_read_b16
+
+main_clear_screen:
+    pusha
+    mov ah, 07h
+    mov al, 0x0
+    mov bh, 0x7
+    mov cx, 0x0
+    mov dx, 0x184F
+    int 10h
+
+    mov ah, 02h
+    mov bh, 0x0
+    mov dx, 0x0
+    int 10h
+    popa
+    
+    ret
 
 section .data
     main_welcome db "Welcome to CornOS."

@@ -1,6 +1,8 @@
 [bits 16]
 org 0x7C00
 
+program_offset dw 0x0
+
 mov sp, 0x7C00
 
 boot:
