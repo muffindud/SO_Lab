@@ -105,7 +105,7 @@ main:
         call main_read_b16
 
         mov ax, word [main_num_buffer]
-        mov word [address1], ax
+        mov word [main_address_1], ax
 
         mov ah, 0Eh
         mov al, ':'
@@ -116,11 +116,70 @@ main:
         call main_read_b16
 
         mov ax, word [main_num_buffer]
-        mov word [address2], ax
+        mov word [main_address_2], ax
 
-    ; TODO: Continue here
+    push es
+    push bx
+    mov bx, word [main_address_1]
+    mov es, bx
+    mov bx, word [main_address_2]
 
-    jmp $
+    mov cl, byte [main_track]
+    mov dh, byte [main_side]
+    mov ch, byte [main_sector]
+
+    main_read_loop:
+        mov ah, 02h
+        mov al, 0x1
+        mov dl, 0x0
+        int 13h
+
+        mov al, byte [main_sector_ct]
+        cmp al, 0x0
+        je main_read_loop_end
+
+        sub al, 0x1
+        mov byte [main_sector_ct], al
+
+        cmp cl, 0x12
+        jl main_read_loop_continue
+        mov cl, 0x0
+        add dh, 0x1
+
+        cmp dh, 0x2
+        jl main_read_loop_continue
+        mov dh, 0x0
+        add ch, 0x1
+
+    main_read_loop_continue:
+        add cl, 0x1
+        add bx, 0x200
+        jmp main_read_loop
+
+    main_read_loop_end:
+        pop bx
+        pop es
+
+    mov bp, main_address_loaded_1
+    mov cx, main_address_loaded_1_len
+    mov dx, 0x0700
+    call main_print
+
+    mov bp, main_address_loaded_2
+    mov cx, main_address_loaded_2_len
+    mov dx, 0x0800
+    call main_print
+
+    mov bx, [main_address_1]
+    mov es, bx
+    mov bx, [main_address_2]
+
+    mov ah, 00h
+    int 16h
+
+    ; Fuck it, i'll solve it later
+    ; Note KEEP ES AT 0x0
+    jmp [main_address_2]
 
 main_print:
     mov ax, 1301h
@@ -341,6 +400,12 @@ section .data
     main_address_prompt db "ADDRESS: "
     main_address_prompt_len equ $ - main_address_prompt
 
+    main_address_loaded_1 db "Sectors loaded."
+    main_address_loaded_1_len equ $ - main_address_loaded_1
+
+    main_address_loaded_2 db "Press any key to continue..."
+    main_address_loaded_2_len equ $ - main_address_loaded_2
+
     main_num_buffer dw 0x0
 
     main_side dw 0x0
@@ -348,7 +413,7 @@ section .data
     main_sector dw 0x0
     main_sector_ct dw 0x0
 
-    address1 dw 0x0
-    address2 dw 0x0
+    main_address_1 dw 0x0
+    main_address_2 dw 0x0
 
     clean_row times 0x50 db 0x0
