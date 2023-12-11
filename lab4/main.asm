@@ -179,7 +179,8 @@ main:
 
     ; Fuck it, i'll solve it later
     ; Note KEEP ES AT 0x0
-    jmp [main_address_2]
+    ; jmp [main_address_2]
+    jmp bx
 
 main_print:
     mov ax, 1301h
