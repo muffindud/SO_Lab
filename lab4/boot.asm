@@ -1,6 +1,8 @@
 [bits 16]
 org 0x7C00
 
+mov sp, 0x7C00
+
 boot:
 
 mov bx, 0x0
