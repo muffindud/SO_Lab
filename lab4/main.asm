@@ -160,14 +160,26 @@ main:
         pop bx
         pop es
 
+    jc main_floppy_error
+
+    mov bp, main_floppy_code
+    mov cx, main_floppy_code_len
+    mov dx, 0x0700
+    call main_print
+
+    mov ax, 0x0E30
+    mov bl, 0x7
+    int 10h
+    int 10h
+
     mov bp, main_address_loaded_1
     mov cx, main_address_loaded_1_len
-    mov dx, 0x0700
+    mov dx, 0x0800
     call main_print
 
     mov bp, main_address_loaded_2
     mov cx, main_address_loaded_2_len
-    mov dx, 0x0800
+    mov dx, 0x0900
     call main_print
 
     mov bx, [main_address_1]
@@ -185,6 +197,45 @@ main:
     ; Note KEEP ES AT 0x0
     ; jmp [main_address_2]
     jmp bx
+
+    main_floppy_error:
+        mov dx, 0x0
+        mov al, 0x0
+        mov cx, 0x10
+        div cx
+
+        mov ah, al
+        mov ah, 0Eh
+        mov bl, 0x7
+        cmp al, 0xA
+        jl main_floppy_error_num1
+
+        add al, 0x7
+
+        main_floppy_error_num1:
+            add al, 0x30
+
+        int 10h
+
+        mov ah, 0Eh
+        mov bl, 0x7
+        mov al, dh
+        cmp al, 0xA
+        jl main_floppy_error_num2
+
+        add al, 0x7
+
+        main_floppy_error_num2:
+            add al, 0x30
+
+        int 10h
+
+        clc
+
+        mov ah, 00h
+        int 16h
+
+        jmp main
 
 main_print:
     mov ax, 1301h
@@ -421,6 +472,9 @@ section .data
 
     main_address_prompt db "ADDRESS: "
     main_address_prompt_len equ $ - main_address_prompt
+
+    main_floppy_code db "Floppy code: "
+    main_floppy_code_len equ $ - main_floppy_code
 
     main_address_loaded_1 db "Sectors loaded."
     main_address_loaded_1_len equ $ - main_address_loaded_1
