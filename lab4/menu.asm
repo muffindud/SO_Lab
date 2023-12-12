@@ -80,7 +80,7 @@ menu_hex_to_dec:
     mov cx, menu_message_hex_prompt_len
     call menu_print
 
-    ; Call read here
+    call menu_read_b16
 
     mov dx, 0x0100
     mov bp, menu_message_dec_prompt
@@ -210,6 +210,106 @@ menu_read_b10:
 
 menu_read_b16:
     call menu_read_key
+
+    cmp al, 0x1B
+    je menu_read_b16_return
+
+    cmp al, 0x0D
+    je menu_read_b16_return
+
+    cmp al, 0x08
+    je menu_read_b16_backspace
+
+    cmp al, 0x30
+    jl menu_read_b16
+
+    cmp al, 0x3A
+    jl menu_read_b16_handle_number
+
+    cmp al, 0x41
+    jl menu_read_b16
+
+    cmp al, 0x47
+    jl menu_read_b16_handle_uppercase
+
+    cmp al, 0x61
+    jl menu_read_b16
+
+    cmp al, 0x67
+    jl menu_read_b16_handle_lowercase
+
+    jmp menu_read_b16
+
+    menu_read_b16_handle_number:
+        sub al, 0x30
+        jmp menu_read_b16_handle_value
+
+    menu_read_b16_handle_uppercase:
+        sub al, 0x37
+        jmp menu_read_b16_handle_value
+
+    menu_read_b16_handle_lowercase:
+        sub al, 0x57
+        jmp menu_read_b16_handle_value
+
+    menu_read_b16_handle_value:
+        mov cl, al
+        mov si, menu_num_buffer
+        add si, word [0x7C00]
+        mov ax, word [si]
+
+        cmp ax, 0xFFF
+        ja menu_read_b16
+
+        mov dx, 0x10
+        mul dx
+
+        add ax, cx
+        mov word [si], ax
+
+        mov ah, 0Eh
+        mov al, cl
+        cmp cx, 0x9
+        jg menu_read_b16_print_letter
+        
+        add al, 0x30
+        int 10h
+        
+        jmp menu_read_b16
+
+        menu_read_b16_print_letter:
+            add al, 0x37
+            int 10h
+            jmp menu_read_b16
+
+    menu_read_b16_return:
+        ret
+    
+    menu_read_b16_backspace:
+        mov dx, 0x0
+        mov si, menu_num_buffer
+        add si, word [0x7C00]
+        mov ax, word [si]
+        cmp ax, 0x0
+        je menu_read_b16
+
+        mov cx, 0x10
+        div cx
+        mov [si], ax
+        
+        pusha
+        mov ah, 03h
+        mov bh, 0x0
+        int 10h
+        mov ah, 02h
+        sub dl, 0x1
+        int 10h
+        mov ah, 0Ah
+        mov al, 0x0
+        int 10h
+        popa
+
+        jmp menu_read_b16
 
 section .data
     menu_message_1 db "1. Hex to Decimal convertor."
