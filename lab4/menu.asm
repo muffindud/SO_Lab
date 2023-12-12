@@ -5,25 +5,21 @@ menu:
 
     mov dx, 0x0000
     mov bp, menu_message_1
-    add bp, word [0x7C00]
     mov cx, menu_message_1_len
     call main_print
 
     mov dx, 0x0100
     mov bp, menu_message_2
-    add bp, word [0x7C00]
     mov cx, menu_message_2_len
     call main_print
 
     mov dx, 0x0200
     mov bp, menu_message_3
-    add bp, word [0x7C00]
     mov cx, menu_message_3_len
     call main_print
 
     mov dx, 0x0300
     mov bp, menu_mesage_prompt
-    add bp, word [0x7C00]
     mov cx, menu_mesage_prompt_len
     call main_print
 
@@ -64,6 +60,7 @@ menu_clear_screen:
 main_print:
     mov ax, 1301h
     mov bx, 0x0007
+    add bp, word [0x7C00]
     int 10h
 
     ret
