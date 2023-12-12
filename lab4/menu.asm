@@ -74,7 +74,22 @@ main_read_key:
 menu_hex_to_dec:
     call menu_clear_screen    
 
-    ; Code here
+    mov dx, 0x0000
+    mov bp, menu_message_hex_prompt
+    mov cx, menu_message_hex_prompt_len
+    call main_print
+
+    ; Call read here
+
+    mov dx, 0x0100
+    mov bp, menu_message_dec_prompt
+    mov cx, menu_message_dec_prompt_len
+    call main_print
+
+    mov dx, 0x0400
+    mov bp, menu_message_continue
+    mov cx, menu_message_continue_len
+    call main_print
 
     mov ah, 00h
     int 16h
@@ -84,7 +99,22 @@ menu_hex_to_dec:
 menu_dec_to_hex:
     call menu_clear_screen
 
-    ; Code here
+    mov dx, 0x0000
+    mov bp, menu_message_dec_prompt
+    mov cx, menu_message_dec_prompt_len
+    call main_print
+
+    ; Call read here
+
+    mov dx, 0x0100
+    mov bp, menu_message_hex_prompt
+    mov cx, menu_message_hex_prompt_len
+    call main_print
+
+    mov dx, 0x0400
+    mov bp, menu_message_continue
+    mov cx, menu_message_continue_len
+    call main_print
 
     mov ah, 00h
     int 16h
@@ -103,3 +133,12 @@ section .data
 
     menu_mesage_prompt db "Enter your choice: "
     menu_mesage_prompt_len equ $ - menu_mesage_prompt
+
+    menu_message_hex_prompt db "Hex: "
+    menu_message_hex_prompt_len equ $ - menu_message_hex_prompt
+
+    menu_message_dec_prompt db "Dec: "
+    menu_message_dec_prompt_len equ $ - menu_message_dec_prompt
+
+    menu_message_continue db "Press any key to continue..."
+    menu_message_continue_len equ $ - menu_message_continue
