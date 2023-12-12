@@ -87,6 +87,13 @@ menu_hex_to_dec:
     mov cx, menu_message_dec_prompt_len
     call menu_print
 
+    call menu_hex_to_ascii_b10
+
+    mov dx, 0x0105
+    mov bp, menu_num_ascii_buffer
+    mov cx, 0x5
+    call menu_print
+
     mov dx, 0x0400
     mov bp, menu_message_continue
     mov cx, menu_message_continue_len
@@ -112,6 +119,14 @@ menu_dec_to_hex:
     mov cx, menu_message_hex_prompt_len
     call menu_print
 
+    call menu_hex_to_ascii_b16
+
+    mov dx, 0x0105
+    mov bp, menu_num_ascii_buffer
+    add bp, 0x1
+    mov cx, 0x4
+    call menu_print
+
     mov dx, 0x0400
     mov bp, menu_message_continue
     mov cx, menu_message_continue_len
@@ -128,7 +143,9 @@ menu_clear_buffers:
 
     mov si, menu_num_ascii_buffer
     add si, word [0x7C00]
-    mov word [si], 0x0
+    mov dword [si], 0x0
+    add si, 0x4
+    mov byte [si], 0x0
 
     ret
 
@@ -311,6 +328,91 @@ menu_read_b16:
 
         jmp menu_read_b16
 
+menu_hex_to_ascii_b10:
+    mov si, menu_num_buffer
+    add si, word [0x7C00]
+    mov ax, word [si]
+
+    mov di, menu_num_ascii_buffer
+    add di, word [0x7C00]
+    add di, 0x4
+
+    mov dx, 0x0
+    mov cx, 0xA
+    div cx
+    add dl, 0x30
+    mov byte [di], dl
+    sub di, 0x1
+    mov dx, 0x0
+    div cx
+    add dl, 0x30
+    mov byte [di], dl
+    sub di, 0x1
+    mov dx, 0x0
+    div cx
+    add dl, 0x30
+    mov byte [di], dl
+    sub di, 0x1
+    mov dx, 0x0
+    div cx
+    add dl, 0x30
+    mov byte [di], dl
+    sub di, 0x1
+    mov dx, 0x0
+    div cx
+    add dl, 0x30
+    mov byte [di], dl
+
+    ret
+
+menu_hex_to_ascii_b16:
+    mov si, menu_num_buffer
+    add si, word [0x7C00]
+    mov ax, word [si]
+
+    mov di, menu_num_ascii_buffer
+    add di, word [0x7C00]
+    add di, 0x4
+
+    mov dx, 0x0
+    mov cx, 0x10
+    div cx
+    call menu_hex_to_ascii_b16_helper
+    mov byte [di], dl
+    sub di, 0x1
+    mov dx, 0x0
+    div cx
+    call menu_hex_to_ascii_b16_helper
+    mov byte [di], dl
+    sub di, 0x1
+    mov dx, 0x0
+    div cx
+    call menu_hex_to_ascii_b16_helper
+    mov byte [di], dl
+    sub di, 0x1
+    mov dx, 0x0
+    div cx
+    call menu_hex_to_ascii_b16_helper
+    mov byte [di], dl
+    ; sub di, 0x1
+    ; mov dx, 0x0
+    ; div cx
+    ; add dl, 0x30
+    ; mov byte [di], dl
+
+    ret
+
+menu_hex_to_ascii_b16_helper:
+    cmp dl, 0xA
+    jl menu_hex_to_ascii_b16_helper_number
+
+    add dl, 0x37
+    ret
+
+    menu_hex_to_ascii_b16_helper_number:
+        add dl, 0x30
+        ret
+
 section .data
     menu_message_1 db "1. Hex to Decimal convertor."
     menu_message_1_len equ $ - menu_message_1
@@ -335,4 +437,4 @@ section .data
 
     menu_num_buffer dw 0x0000
 
-    menu_num_ascii_buffer dw 0x0000
+    menu_num_ascii_buffer dd 0x0
