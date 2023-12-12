@@ -6,24 +6,24 @@ menu:
     mov dx, 0x0000
     mov bp, menu_message_1
     mov cx, menu_message_1_len
-    call main_print
+    call menu_print
 
     mov dx, 0x0100
     mov bp, menu_message_2
     mov cx, menu_message_2_len
-    call main_print
+    call menu_print
 
     mov dx, 0x0200
     mov bp, menu_message_3
     mov cx, menu_message_3_len
-    call main_print
+    call menu_print
 
     mov dx, 0x0300
     mov bp, menu_mesage_prompt
     mov cx, menu_mesage_prompt_len
-    call main_print
+    call menu_print
 
-    call main_read_key
+    call menu_read_key
 
     cmp al, '1'
     je menu_hex_to_dec
@@ -57,7 +57,7 @@ menu_clear_screen:
     
     ret
 
-main_print:
+menu_print:
     mov ax, 1301h
     mov bx, 0x0007
     add bp, word [0x7C00]
@@ -65,7 +65,7 @@ main_print:
 
     ret
 
-main_read_key:
+menu_read_key:
     mov ah, 0x00
     int 16h
 
@@ -73,53 +73,143 @@ main_read_key:
 
 menu_hex_to_dec:
     call menu_clear_screen    
+    call menu_clear_buffers
 
     mov dx, 0x0000
     mov bp, menu_message_hex_prompt
     mov cx, menu_message_hex_prompt_len
-    call main_print
+    call menu_print
 
     ; Call read here
 
     mov dx, 0x0100
     mov bp, menu_message_dec_prompt
     mov cx, menu_message_dec_prompt_len
-    call main_print
+    call menu_print
 
     mov dx, 0x0400
     mov bp, menu_message_continue
     mov cx, menu_message_continue_len
-    call main_print
+    call menu_print
 
-    mov ah, 00h
-    int 16h
+    call menu_read_key
 
     jmp word [0x7C00]
 
 menu_dec_to_hex:
     call menu_clear_screen
+    call menu_clear_buffers
 
     mov dx, 0x0000
     mov bp, menu_message_dec_prompt
     mov cx, menu_message_dec_prompt_len
-    call main_print
+    call menu_print
 
-    ; Call read here
+    call menu_read_b10
 
     mov dx, 0x0100
     mov bp, menu_message_hex_prompt
     mov cx, menu_message_hex_prompt_len
-    call main_print
+    call menu_print
 
     mov dx, 0x0400
     mov bp, menu_message_continue
     mov cx, menu_message_continue_len
-    call main_print
+    call menu_print
 
-    mov ah, 00h
-    int 16h
+    call menu_read_key
 
     jmp word [0x7C00]
+
+menu_clear_buffers:
+    mov si, menu_num_buffer
+    add si, word [0x7C00]
+    mov word [si], 0x0
+
+    mov si, menu_num_ascii_buffer
+    add si, word [0x7C00]
+    mov word [si], 0x0
+
+    ret
+
+menu_read_b10:
+    call menu_read_key
+
+    cmp al, 0x0D
+    je menu_read_b10_return
+
+    cmp al, 0x08
+    je menu_read_b10_backspace
+
+    cmp al, 0x30
+    jl menu_read_b10
+    cmp al, 0x39
+    jg menu_read_b10
+
+    sub al, 0x30
+    mov cl, al
+    mov si, menu_num_buffer
+    add si, word [0x7C00]
+    mov ax, word [si]
+
+    cmp ax, 0x1999
+    je menu_read_b10_limit
+
+    cmp ax, 0x1999
+    jb menu_read_b10_accept
+
+    jmp menu_read_b10
+
+    menu_read_b10_accept:
+        mov dx, 0xA
+        mul dx
+        add ax, cx
+        mov word [si], ax
+
+        mov ah, 0Eh
+        mov al, cl
+        add al, 0x30
+        int 10h
+
+        jmp menu_read_b10
+
+    menu_read_b10_return:
+        ret
+
+    menu_read_b10_backspace:
+        mov dx, 0x0
+        mov si, menu_num_buffer
+        add si, word [0x7C00]
+        mov ax, word [si]
+        cmp ax, 0x0
+        je menu_read_b10
+
+        mov cx, 0xA
+        div cx
+        mov word [si], ax
+
+        pusha
+        mov ah, 03h
+        mov bh, 0x0
+        int 10h
+        mov ah, 02h
+        sub dl, 0x1
+        int 10h
+        mov ah, 0Ah
+        mov al, 0x0
+        int 10h
+        popa
+
+        jmp menu_read_b10
+
+    menu_read_b10_limit:
+        cmp cl, 0x5
+        jg menu_read_b10
+
+        jmp menu_read_b10_accept
+
+menu_read_b16:
+    call menu_read_key
 
 section .data
     menu_message_1 db "1. Hex to Decimal convertor."
@@ -142,3 +232,7 @@ section .data
 
     menu_message_continue db "Press any key to continue..."
     menu_message_continue_len equ $ - menu_message_continue
+
+    menu_num_buffer dw 0x0000
+
+    menu_num_ascii_buffer dw 0x0000
