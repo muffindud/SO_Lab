@@ -42,7 +42,7 @@ menu:
 
 menu_bootloader:
     call menu_clear_screen
-    jmp 0x0:0x7C00
+    jmp 0x0:0x7E00
 
 menu_clear_screen:
     pusha
@@ -75,20 +75,24 @@ main_read_key:
     ret
 
 menu_hex_to_dec:
-    
+    call menu_clear_screen    
+
+    ; Code here
 
     mov ah, 00h
     int 16h
 
-    jmp menu
+    jmp word [0x7C00]
 
 menu_dec_to_hex:
-    
+    call menu_clear_screen
+
+    ; Code here
 
     mov ah, 00h
     int 16h
 
-    jmp menu
+    jmp word [0x7C00]
 
 section .data
     menu_message_1 db "1. Hex to Decimal convertor."
