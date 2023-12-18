@@ -1,5 +1,3 @@
-; TODO: Set the origin
-
 menu:
     call menu_clear_screen
 
@@ -38,7 +36,7 @@ menu:
 
 menu_bootloader:
     call menu_clear_screen
-    jmp 0x0:0x7E00
+    jmp 0x0:0x7C02
 
 menu_clear_screen:
     pusha

@@ -29,34 +29,10 @@ main:
     main_accept_side:
         mov word [main_side], ax
 
-    main_read_track:
-        call main_clear_num_buffer
-
-        mov dx, 0x0300
-        mov bp, main_track_prompt
-        mov cx, main_track_prompt_len
-        call main_print
-
-        call main_read_b10
-
-        mov ax, word [main_num_buffer]
-        cmp ax, 0x1
-        jl main_track_fault
-
-        cmp ax, 0x12
-        jg main_track_fault
-
-        mov word [main_track], ax
-        jmp main_read_sector
-
-        main_track_fault:
-            call main_clear_row
-            jmp main_read_track
-
     main_read_sector:
         call main_clear_num_buffer
 
-        mov dx, 0x0400
+        mov dx, 0x0300
         mov bp, main_sector_prompt
         mov cx, main_sector_prompt_len
         call main_print
@@ -64,14 +40,38 @@ main:
         call main_read_b10
 
         mov ax, word [main_num_buffer]
+        cmp ax, 0x1
+        jl main_sector_fault
+
+        cmp ax, 0x12
+        jg main_sector_fault
+
+        mov word [main_sector], ax
+        jmp main_read_track
+
+        main_sector_fault:
+            call main_clear_row
+            jmp main_read_sector
+
+    main_read_track:
+        call main_clear_num_buffer
+
+        mov dx, 0x0400
+        mov bp, main_track_prompt
+        mov cx, main_track_prompt_len
+        call main_print
+
+        call main_read_b10
+
+        mov ax, word [main_num_buffer]
         cmp ax, 0x50
-        jl main_accept_sector
+        jl main_accept_track
 
         call main_clear_row
-        jmp main_read_sector
+        jmp main_read_track
 
-        main_accept_sector:
-            mov word [main_sector], ax
+        main_accept_track:
+            mov word [main_track], ax
     
     main_read_sector_ct:
         call main_clear_num_buffer
@@ -124,9 +124,9 @@ main:
     mov es, bx
     mov bx, word [main_address_2]
 
-    mov cl, byte [main_track]
+    mov cl, byte [main_sector]
     mov dh, byte [main_side]
-    mov ch, byte [main_sector]
+    mov ch, byte [main_track]
 
     main_read_loop:
         mov ah, 02h
@@ -193,9 +193,6 @@ main:
 
     mov word [program_offset], bx
 
-    ; Fuck it, i'll solve it later
-    ; Note KEEP ES AT 0x0
-    ; jmp [main_address_2]
     jmp bx
 
     main_floppy_error:
